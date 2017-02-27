@@ -22,12 +22,15 @@ define([
   "dojo/_base/lang",
   "dojo/_base/window",
 
+  "dojo/_base/fx",
+
   "dojo/Deferred",
 
   "dojo/dom",
   "dojo/dom-attr",
   "dojo/dom-class",
   "dojo/dom-style",
+  "dojo/dom-construct",
 
   "dojo/on",
   "dojo/query",
@@ -55,11 +58,16 @@ define([
   "application/SmartCards/SmartCards",
   "application/SmartTip/SmartTip",
 
+  "dojo/parser",
+  "dijit/registry",
+  "dijit/Dialog",
+
   "dojo/domReady!"
 ], function (
   declare, array, Color, lang, win,
+  fx,
   Deferred,
-  dom, domAttr, domClass, domStyle,
+  dom, domAttr, domClass, domStyle, domConstruct,
   on, query,
   arcgisUtils, geometryEngine, Point, webMercatorUtils,
   Graphic, GraphicsLayer,
@@ -67,17 +75,48 @@ define([
   SimpleRenderer, SimpleMarkerSymbol, SimpleLineSymbol,
   SpatialReference,
   GeometryService, ProjectParameters,
-  MapUrlParams, SmartCards, SmartTip
+  MapUrlParams, SmartCards, SmartTip,
+  dojoParser, registry, Dialog
 ) {
   return declare(null, {
     config: {},
-    startup: function (config) {
+    startup: function (config, sdgDefaults) {
       var promise;
       // config will contain application and user defined info for the template such as i18n strings, the web map id
       // and application id
       // any url parameters and any application specific configuration information.
       if (config) {
         this.config = config;
+
+        this.sdgDefaults = sdgDefaults;
+        // console.log('sdgDefaults', this.sdgDefaults);
+
+        // get random sdg to start the app with
+        var goalId = 1;
+        if (this.config.urlObject &&
+          this.config.urlObject.query &&
+          this.config.urlObject.query.sdg) {
+
+          goalId = this.config.urlObject.query.sdg;
+
+          if (goalId < 1 || goalId > 17) {
+            goalId = Math.floor(Math.random() * 17) + 1;
+          }
+        } else {
+          goalId = Math.floor(Math.random() * 17) + 1;
+        }
+
+        var goal = this.sdgDefaults.goals[goalId];
+
+        this._setSdgConfig(goal);
+
+        // sdg-specific
+        on(dom.byId('sdg-img'), 'mouseover', lang.hitch(this, this._sdgMouseOver));
+        on(dom.byId('sdg-img'), 'mouseout', lang.hitch(this, this._sdgMouseOut));
+        on(dom.byId('sdg-img'), 'click', lang.hitch(this, this._sdgClick));
+
+        $('#btnSearchKeywords').click(this._sdgKeywordSearch.bind(this));
+        $('.sdg-thumb img').click(this._sdgThumbClick.bind(this));
 
         // init colors
         this._initColors();
@@ -199,6 +238,121 @@ define([
       }
       on(dom.byId("btnToggle"), "click", lang.hitch(this, this._toggleBottom));
       on(this.map, "click", lang.hitch(this, this._mapClicked));
+
+      this._initFeed();
+    },
+
+    _setSdgConfig: function (goal) {
+      this.config.color = goal.color_info.hex;
+      this.config.title = 'Goal ' + goal.id;
+      this.config.subtitle = goal.title;
+      this.config.keyword = goal.defaultKeyword;
+      this.config.defaultKeyword = goal.defaultKeyword;
+
+      $('#txtKeywords').val(decodeURIComponent(goal.defaultKeyword));
+
+      $('.btn-default').css('color', this.config.colorText || '#fff');
+      $('.btn-default').css('background-color', this.config.color);
+    },
+
+    _sdgMouseOver: function() {
+      var el = dom.byId('sdg-img');
+      domClass.add(el, 'sdg-halo anim-pause');
+
+      fx.animateProperty({
+        node: el,
+        properties: {
+          top: {
+            start: -210,
+            end: -200,
+            units: 'px'
+          }
+        }
+      }).play();
+    },
+
+    _sdgMouseOut: function() {
+      var el = dom.byId('sdg-img');
+      domClass.remove(el, 'sdg-halo anim-pause');
+
+      fx.animateProperty({
+        node: el,
+        properties: {
+          top: {
+            start: -200,
+            end: -210,
+            units: 'px'
+          }
+        }
+      }).play();
+    },
+
+    _sdgClick: function () {
+      $('#sdgModal').modal('show');
+    },
+
+    _sdgThumbClick: function (evt) {
+      // console.log(evt);
+      var goalId = $(evt.target).data('goalid');
+      if (!goalId) {
+        return;
+      }
+
+      $('#sdgModal').modal('hide');
+
+      this._stopTimer();
+
+      var goal = this.sdgDefaults.goals[goalId];
+
+      this._setSdgConfig(goal);
+
+      this._initColors();
+
+      this._setTitles();
+      this._setAttribution();
+
+      this._resetLayers();
+      this._initLayers();
+
+      this.smartCards.update();
+
+      this.smartTip.options.color = this.config.color;
+      this.smartTip.updateColorScheme();
+      this.smartTip.update({
+        layer: this.lyrGraphics,
+        color: this.config.color
+      });
+
+      clearInterval(this.feedIntervalHandler);
+      this._initFeed();
+    },
+
+    _sdgKeywordSearch: function () {
+      this._resetLayers();
+      this._initLayers();
+
+      this.smartCards.update();
+
+      this.smartTip.options.color = this.config.color;
+      this.smartTip.updateColorScheme();
+      this.smartTip.update({
+        layer: this.lyrGraphics,
+        color: this.config.color
+      });
+
+      var keywords = this.config.keyword;
+      var txtVal = $('#txtKeywords').val();
+      if (txtVal !== '') {
+        keywords = txtVal;
+        keywords = keywords.replace('or', 'OR').replace('and', 'AND').replace(/ /g, '+');
+      } else {
+        keywords = this.config.defaultKeyword;
+        $('#txtKeywords').val(decodeURIComponent(keywords));
+      }
+
+      this.config.keyword = encodeURIComponent(keywords);
+
+      clearInterval(this.feedIntervalHandler);
       this._initFeed();
     },
 
@@ -218,13 +372,17 @@ define([
       dom.byId("panelAttribution").innerHTML = attr;
     },
 
+    _resetLayers: function () {
+      this.map.removeLayer(this.lyrGraphics);
+    },
+
     // init layers
     _initLayers: function() {
       var symLine = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255]), 2);
       var sym = new SimpleMarkerSymbol().setSize(14).setColor(new Color(this.config.color)).setOutline(symLine);
       var ren = new SimpleRenderer(sym);
 
-      this.lyrGraphics  = new GraphicsLayer();
+      this.lyrGraphics = new GraphicsLayer();
       this.lyrGraphics.setRenderer(ren);
       on(this.lyrGraphics, "click", lang.hitch(this, this._graphicClicked));
       this.map.addLayer(this.lyrGraphics);
@@ -237,7 +395,7 @@ define([
         color: this.config.color
       };
       this.smartCards = new SmartCards(options, dom.byId("panelContent"));
-      on(this.smartCards, 'card-clicked', lang.hitch(this, this._cardClicked));
+      this.smartCardClick = on(this.smartCards, 'card-clicked', lang.hitch(this, this._cardClicked));
     },
 
     // init smart tip
@@ -336,7 +494,7 @@ define([
     _startFeed: function() {
       var num = this.config.refresh * 60 * 1000 || 1200000;
       this._getFeedData();
-      setInterval(lang.hitch(this, this._getFeedData), num);
+      this.feedIntervalHandler = setInterval(lang.hitch(this, this._getFeedData), num);
     },
 
     // get feed data

@@ -99,6 +99,16 @@ define([
       this.containerNode.innerHTML = "";
     },
 
+    updateColorScheme: function () {
+      var rgb = Color.fromString(this.options.color).toRgb();
+      rgb.push(0.5);
+      var symHiLine = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255, 0]), 1);
+      var symHi = new SimpleMarkerSymbol().setSize(12).setColor(new Color(rgb)).setOutline(symHiLine);
+      var renHi = new SimpleRenderer(symHi);
+      // this.layer = new GraphicsLayer();
+      this.layer.setRenderer(renHi);
+    },
+
     // update
     update: function(options) {
       this.options.point = options.point;

@@ -78,6 +78,8 @@ define([
       this.config = defaults;
       // Gets parameters from the URL, convert them to an object and remove HTML tags.
       this.urlObject = this._createUrlParamsObject();
+
+      this.config.urlObject = this.urlObject;
     },
     startup: function () {
       var promise = this._init();
@@ -230,6 +232,8 @@ define([
       // panel.
       url = document.location.href;
       urlObject = urlUtils.urlToObject(url);
+      console.log('urlObject', urlObject);
+
       urlObject.query = urlObject.query || {};
       // remove any HTML tags from query item
       urlObject.query = esriLang.stripTags(urlObject.query);

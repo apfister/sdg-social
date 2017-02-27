@@ -25,7 +25,8 @@ define({
   "group": "",
   //Enter the url to the proxy if needed by the application. See the 'Using the proxy page' help topic for details
   //http://developers.arcgis.com/en/javascript/jshelp/ags_proxy.html
-  "proxyurl": "http://localhost/proxy-social.php",
+  // "proxyurl": "http://localhost/proxy-social.php",
+  "proxyurl": "http://sdg.esri.com/proxy/proxy.ashx",
   "bingKey": "", //Enter the url to your organizations bing maps key if you want to use bing basemaps
   //Defaults to arcgis.com. Set this value to your portal or organization host name.
   "sharinghost": location.protocol + "//" + "www.arcgis.com",
@@ -34,11 +35,11 @@ define({
   // App
   // **
   "color": "#2cbade",
-  "title": "LIVE MAP",
+  "title": "The Goals",
   "subtitle": "",
   "feedUrl": location.protocol + "//" + "live.esri.com/LiveMaps/feed.php",
-  "feed": "flu",
-  "keyword": "",
+  "feed": "twitter",
+  "keyword": "%23SDGs",
   "interval": 0.5, //minutes
   "refresh": 20, //minutes
   // **

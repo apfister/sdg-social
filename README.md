@@ -5,9 +5,7 @@ Live Maps is a configurable template for providing live feeds within the map's i
 
 ![Screen Shot](http://coolmaps.esri.com/templates/LiveMapsFood/images/thumb.png)
 
-[View the SDG Example live] (http://sdg.esri.com/social/)
-
-[View the base Live Maps Template live] (http://coolmaps.esri.com/templates/LiveMapsFood/)
+[View it live] (http://coolmaps.esri.com/templates/LiveMapsFood/)
 
 #Features
 
@@ -31,10 +29,10 @@ Refresh interval: The interval in minutes to refresh teh feed.
 
 #Instructions
 
-1. Download and unzip the .zip file or clone the repo.
+1. Download and unzip the .zip file or clone the repo. 
 2. Web-enable the directory
-3. Access the .html page
-4. See the readme page for more details.
+3. Access the .html page 
+4. See the readme page for more details. 
 
 
 #Deploying
@@ -55,19 +53,19 @@ Refresh interval: The interval in minutes to refresh teh feed.
 
 - Notepad or HTML editor
 - Some background with HTML, CSS and JavaScript
-- Experience with the ArcGIS API for JavaScript is helpful.
+- Experience with the ArcGIS API for JavaScript is helpful. 
 
 #Resources
 
 - [ArcGIS API for JavaScript Resource Center](http://help.arcgis.com/en/webapi/javascript/arcgis/index.html)
 
 #Issues
-Found a bug or want to request a new feature? Please let us know by submitting an issue.
+Found a bug or want to request a new feature? Please let us know by submitting an issue. 
 
 #Contributing
-Anyone and everyone is welcome to contribute.
+Anyone and everyone is welcome to contribute. 
 
-#Licensing
+#Licensing 
 
 Copyright 2014 Esri
 
@@ -78,5 +76,5 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 A copy of the license is available in the repository's license.txt file.
-[](Esri Tags: ArcGIS Online Web Application Templates)
+[](Esri Tags: ArcGIS Online Web Application Templates) 
 [](Esri Language: JavaScript)
